@@ -122,20 +122,26 @@ function Navbar() {
         {/*    </div>*/}
         {/*</form>*/}
 
-        <div className="ml-auto">
-          <Button
-            variant="outline"
-            className="mr-5"
-            onClick={() => {
-              if (openConnectModal) {
-                openConnectModal();
-              } else {
+        <div className="ml-auto flex items-center">
+          {openAccountModal && (<DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                  variant="secondary"
+                  className="mr-5"
+              >
+                Ads
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => {
+                router.push("/my-ads");
+              }}>My Ads</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
                 router.push("/new-ad");
-              }
-            }}
-          >
-            <PlusIcon className="mr-2 h-4 w-4" /> Post Ad
-          </Button>
+              }}>Post Ad</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>)}
+
 
           {openConnectModal && (
             <Button variant="default" onClick={openConnectModal}>
@@ -155,27 +161,6 @@ function Navbar() {
             </Button>
           )}
         </div>
-
-        {/*{openAccountModal && (<DropdownMenu>*/}
-        {/*  <DropdownMenuTrigger asChild>*/}
-        {/*    <Button*/}
-        {/*        variant="secondary"*/}
-        {/*        size="icon"*/}
-        {/*        className="rounded-full ml-auto"*/}
-        {/*    >*/}
-        {/*      <CircleUser className="h-5 w-5" />*/}
-        {/*      <span className="sr-only">Toggle user menu</span>*/}
-        {/*    </Button>*/}
-        {/*  </DropdownMenuTrigger>*/}
-        {/*  <DropdownMenuContent align="end">*/}
-        {/*    <DropdownMenuLabel>My Account</DropdownMenuLabel>*/}
-        {/*    <DropdownMenuSeparator />*/}
-        {/*    <DropdownMenuItem>Address: {account.address}</DropdownMenuItem>*/}
-        {/*    <DropdownMenuItem>Balance: {balance?.data?.symbol} {balance?.data?.formatted}</DropdownMenuItem>*/}
-        {/*    <DropdownMenuSeparator />*/}
-        {/*    <DropdownMenuItem>Disconnect Wallet</DropdownMenuItem>*/}
-        {/*  </DropdownMenuContent>*/}
-        {/*</DropdownMenu>)}*/}
       </div>
     </header>
   );

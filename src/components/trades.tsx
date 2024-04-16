@@ -93,7 +93,7 @@ export function Trades() {
             <TableHead>Advertisers</TableHead>
             <TableHead>Price</TableHead>
             <TableHead>Available/Limit</TableHead>
-            <TableHead>Payment</TableHead>
+            <TableHead>Payment Method</TableHead>
             <TableHead>Trade</TableHead>
           </TableRow>
         </TableHeader>
