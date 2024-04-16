@@ -1,7 +1,7 @@
 import React from 'react';
 import {Trades} from "@/components/trades";
 
-function Page(props) {
+function Page() {
     return (
         <div>
             <Trades />

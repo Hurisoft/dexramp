@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import React from "react";
+import TradeTableItem from "@/components/custom/TradeTableItem";
 
 export function Trades() {
   const [amount, setAmount] = useQueryState("amount");
@@ -97,60 +98,8 @@ export function Trades() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Avatar>
-                  <AvatarFallback>SG</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p>SomeGuy69</p>
-                  <p className="text-sm text-neutral-500 mt-1">
-                    57 orders | 98.30% completion
-                  </p>
-                </div>
-              </div>
-            </TableCell>
-            <TableCell className="text-xl">13.50 GHS</TableCell>
-            <TableCell>
-              <p>2,081.71 USDT</p>
-              <p className="text-neutral-500 mt-1">GH₵200 - GH₵3,000</p>
-            </TableCell>
-            <TableCell className="flex flex-col gap-2 items-start">
-              <Badge variant="secondary">MoMo</Badge>
-              <Badge variant="secondary">Vodafone cash</Badge>
-            </TableCell>
-            <TableCell>
-              <Button className="w-full">Buy USDT</Button>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Avatar>
-                  <AvatarFallback>SG</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p>SomeGuy69</p>
-                  <p className="text-sm text-neutral-500 mt-1">
-                    57 orders | 98.30% completion
-                  </p>
-                </div>
-              </div>
-            </TableCell>
-            <TableCell className="text-xl">13.50 GHS</TableCell>
-            <TableCell>
-              <p>2,081.71 USDT</p>
-              <p className="text-neutral-500 mt-1">GH₵200 - GH₵3,000</p>
-            </TableCell>
-            <TableCell className="flex flex-col gap-2 items-start">
-              <Badge variant="secondary">MoMo</Badge>
-              <Badge variant="secondary">Vodafone cash</Badge>
-            </TableCell>
-            <TableCell>
-              <Button className="w-full">Buy USDT</Button>
-            </TableCell>
-          </TableRow>
+          <TradeTableItem />
+          <TradeTableItem />
         </TableBody>
       </Table>
     </div>

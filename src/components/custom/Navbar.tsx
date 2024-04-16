@@ -2,9 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import {CircleUser, Menu, Package2} from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {Sheet, SheetContent, SheetTrigger} from "@/components/ui/sheet";
+import { CircleUser, Menu, Package2, PlusIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,11 +13,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group";
-import {useQueryState} from "nuqs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useQueryState } from "nuqs";
+import {
+  useConnectModal,
+  useAccountModal,
+  useChainModal,
+} from "@rainbow-me/rainbowkit";
+import { useBalance, useAccount } from "wagmi";
+import { useRouter, usePathname } from "next/navigation";
 
-function Navbar(props) {
-  const [trade, setTrade] = useQueryState("trade", {defaultValue: "buy"});
+function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const { openConnectModal } = useConnectModal();
+  const { openAccountModal } = useAccountModal();
+
+  const account = useAccount();
+  const balance = useBalance({
+    address: account.address,
+  });
+
+  const [trade, setTrade] = useQueryState("trade", { defaultValue: "buy" });
 
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 w-screen">
@@ -29,18 +47,29 @@ function Navbar(props) {
           <Package2 className="h-6 w-6" />
           <span className="">DexRamp</span>
         </Link>
-        <ToggleGroup value={trade} onValueChange={(t) => setTrade(t)} type="single">
-          <ToggleGroupItem value="buy" aria-label="Toggle buy">
-            <p className="text-muted-foreground transition-colors hover:text-foreground">
-              Buy
-            </p>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="sell" aria-label="Toggle sell">
-            <p className="text-muted-foreground transition-colors hover:text-foreground">
-              Sell
-            </p>
-          </ToggleGroupItem>
-        </ToggleGroup>
+        {pathname !== "/market" ? (
+          <div className="flex items-center gap-0.5">
+          <Link href="/market?trade=buy"><Button className="px-3" variant="ghost">Buy</Button></Link>
+          <Link href="/market?trade=sell"><Button className="px-3" variant="ghost">Sell</Button></Link>
+          </div>
+        ) : (
+          <ToggleGroup
+            value={trade}
+            onValueChange={(t) => setTrade(t)}
+            type="single"
+          >
+            <ToggleGroupItem value="buy" aria-label="Toggle buy">
+              <p className="text-muted-foreground transition-colors hover:text-foreground">
+                Buy
+              </p>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="sell" aria-label="Toggle sell">
+              <p className="text-muted-foreground transition-colors hover:text-foreground">
+                Sell
+              </p>
+            </ToggleGroupItem>
+          </ToggleGroup>
+        )}
       </nav>
       <Sheet>
         <SheetTrigger asChild>
@@ -58,18 +87,26 @@ function Navbar(props) {
               <Package2 className="h-6 w-6" />
               <span className="">DexRamp</span>
             </Link>
-            <ToggleGroup value={trade} onValueChange={(t) => setTrade(t)} type="single">
-              <ToggleGroupItem value="buy" aria-label="Toggle buy">
-                <p className="text-muted-foreground transition-colors hover:text-foreground">
-                  Buy
-                </p>
-              </ToggleGroupItem>
-              <ToggleGroupItem value="sell" aria-label="Toggle sell">
-                <p className="text-muted-foreground transition-colors hover:text-foreground">
-                  Sell
-                </p>
-              </ToggleGroupItem>
-            </ToggleGroup>
+            {pathname !== "/market" ? (
+              <></>
+            ) : (
+              <ToggleGroup
+                value={trade}
+                onValueChange={(t) => setTrade(t)}
+                type="single"
+              >
+                <ToggleGroupItem value="buy" aria-label="Toggle buy">
+                  <p className="text-muted-foreground transition-colors hover:text-foreground">
+                    Buy
+                  </p>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="sell" aria-label="Toggle sell">
+                  <p className="text-muted-foreground transition-colors hover:text-foreground">
+                    Sell
+                  </p>
+                </ToggleGroupItem>
+              </ToggleGroup>
+            )}
           </nav>
         </SheetContent>
       </Sheet>
@@ -84,26 +121,61 @@ function Navbar(props) {
         {/*        />*/}
         {/*    </div>*/}
         {/*</form>*/}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+
+        <div className="ml-auto">
+          <Button
+            variant="outline"
+            className="mr-5"
+            onClick={() => {
+              if (openConnectModal) {
+                openConnectModal();
+              } else {
+                router.push("/new-ad");
+              }
+            }}
+          >
+            <PlusIcon className="mr-2 h-4 w-4" /> Post Ad
+          </Button>
+
+          {openConnectModal && (
+            <Button variant="default" onClick={openConnectModal}>
+              Connect Wallet
+            </Button>
+          )}
+
+          {openAccountModal && (
             <Button
               variant="secondary"
               size="icon"
               className="rounded-full ml-auto"
+              onClick={openAccountModal}
             >
               <CircleUser className="h-5 w-5" />
               <span className="sr-only">Toggle user menu</span>
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Support</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+        </div>
+
+        {/*{openAccountModal && (<DropdownMenu>*/}
+        {/*  <DropdownMenuTrigger asChild>*/}
+        {/*    <Button*/}
+        {/*        variant="secondary"*/}
+        {/*        size="icon"*/}
+        {/*        className="rounded-full ml-auto"*/}
+        {/*    >*/}
+        {/*      <CircleUser className="h-5 w-5" />*/}
+        {/*      <span className="sr-only">Toggle user menu</span>*/}
+        {/*    </Button>*/}
+        {/*  </DropdownMenuTrigger>*/}
+        {/*  <DropdownMenuContent align="end">*/}
+        {/*    <DropdownMenuLabel>My Account</DropdownMenuLabel>*/}
+        {/*    <DropdownMenuSeparator />*/}
+        {/*    <DropdownMenuItem>Address: {account.address}</DropdownMenuItem>*/}
+        {/*    <DropdownMenuItem>Balance: {balance?.data?.symbol} {balance?.data?.formatted}</DropdownMenuItem>*/}
+        {/*    <DropdownMenuSeparator />*/}
+        {/*    <DropdownMenuItem>Disconnect Wallet</DropdownMenuItem>*/}
+        {/*  </DropdownMenuContent>*/}
+        {/*</DropdownMenu>)}*/}
       </div>
     </header>
   );
