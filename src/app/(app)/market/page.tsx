@@ -1,10 +1,12 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import {Trades} from "@/components/trades";
 
 function Page() {
     return (
         <div>
-            <Trades />
+            <Suspense>
+                <Trades />
+            </Suspense>
         </div>
     );
 }

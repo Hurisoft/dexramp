@@ -86,8 +86,8 @@ export function OrderDetails() {
             <Card className="p-4 rounded-lg">
               <h2 className="text-lg font-semibold">3. Notify Seller</h2>
               <p className="text-sm mt-2">
-                After payment, remember to click the 'Transferred, Notify
-                Seller' button to facilitate the crypto release by the seller.
+                After payment, remember to click the &lsquo;Transferred, Notify
+                Seller&rsquo; button to facilitate the crypto release by the seller.
               </p>
               <div ref={parent} className="flex space-x-4 mt-4">
                 {!orderPaid && <Dialog>
@@ -205,66 +205,5 @@ export function OrderDetails() {
         </Card>
       </div>
     </div>
-  );
-}
-
-function CircleIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-    </svg>
-  );
-}
-
-function ClipboardCopyIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-      <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v4" />
-      <path d="M21 14H11" />
-      <path d="m15 10-4 4 4 4" />
-    </svg>
-  );
-}
-
-function PlaneIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
-    </svg>
   );
 }

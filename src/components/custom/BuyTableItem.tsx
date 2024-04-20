@@ -112,7 +112,7 @@ function BuyTableItem() {
                 </DialogDescription>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="item-1">
-                    <AccordionTrigger>Advertiser's terms</AccordionTrigger>
+                    <AccordionTrigger>Advertiser&apos;s terms</AccordionTrigger>
                     <AccordionContent>
                       Fast payments only. Stay online
                     </AccordionContent>

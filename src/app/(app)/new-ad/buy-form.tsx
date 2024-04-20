@@ -345,7 +345,7 @@ function BuyForm() {
                       </FormControl>
                       <SelectContent position="popper">
                         {paymentMethodsOptions.map((method) => (
-                          <SelectItem value={method.accountNumber}>
+                          <SelectItem key={method.accountNumber} value={method.accountNumber}>
                             <p>
                               {method.label}{" "}
                               <span className="text-muted-foreground">

@@ -1,10 +1,8 @@
 "use client"
 
-import React from 'react';
+import React, {Suspense} from 'react';
 import {Table, TableBody, TableHead, TableHeader, TableRow} from "@/components/ui/table";
-import BuyTableItem from "@/components/custom/BuyTableItem";
 import MyAdsTableItem from "@/components/custom/MyAdsTableItem";
-import AddPaymentMethodButton from "@/components/custom/AddPaymentMethodButton";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {PlusIcon} from "lucide-react";
@@ -22,10 +20,12 @@ function Page() {
                         <TableHead>Action</TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody>
-                    <MyAdsTableItem />
-                    <MyAdsTableItem />
-                </TableBody>
+                <Suspense>
+                    <TableBody>
+                        <MyAdsTableItem />
+                        <MyAdsTableItem />
+                    </TableBody>
+                </Suspense>
             </Table>
         </div>
     );

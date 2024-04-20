@@ -146,7 +146,7 @@ function SellTableItem() {
                 </DialogDescription>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="item-1">
-                    <AccordionTrigger>Advertiser's terms</AccordionTrigger>
+                    <AccordionTrigger>Advertiser&apos;s terms</AccordionTrigger>
                     <AccordionContent>
                       Fast payments only. Stay online
                     </AccordionContent>
@@ -216,7 +216,7 @@ function SellTableItem() {
                     </SelectTrigger>
                     <SelectContent>
                       {paymentMethodsOptions.map((method) => (
-                        <SelectItem value={method.accountNumber}>
+                        <SelectItem key={method.accountNumber} value={method.accountNumber}>
                           <p>
                             {method.label}{" "}
                             <span className="text-muted-foreground">
