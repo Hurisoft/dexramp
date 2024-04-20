@@ -260,7 +260,7 @@ function SellTableItem() {
                           action: (
                             <ToastAction
                               onClick={() =>
-                                router.push("/orders/439e8dj8j9de3d3e")
+                                router.push("/orders/detail?id=439e8dj8j9de3d3e")
                               }
                               altText="See order"
                             >
