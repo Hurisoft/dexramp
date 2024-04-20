@@ -1,10 +1,10 @@
-import Image from "next/image";
+"use client";
 
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  return (
-    <main>
-      Hello world
-    </main>
-  );
+  const router = useRouter();
+  router.push("/market");
+
+  return <main>DexRamp</main>;
 }

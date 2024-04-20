@@ -23,13 +23,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import React from "react";
-import TradeTableItem from "@/components/custom/TradeTableItem";
+import BuyTableItem from "@/components/custom/BuyTableItem";
+import SellTableItem from "@/components/custom/SellTableItem";
 
 export function Trades() {
   const [amount, setAmount] = useQueryState("amount");
   const [currency, setCurrency] = useQueryState("currency");
   const [paymentMethod, setPaymentMethod] = useQueryState("paymentMethod");
-  const [crypto, setCrypto] = useQueryState("crypto", {defaultValue: "usdt"});
+  const [crypto, setCrypto] = useQueryState("crypto", { defaultValue: "usdt" });
+  const [trade, setTrade] = useQueryState("trade", { defaultValue: "buy" });
 
   return (
     <div className="p-6 max-w-screen-2xl mx-auto">
@@ -56,6 +58,9 @@ export function Trades() {
           </ToggleGroupItem>
           <ToggleGroupItem value="sol" aria-label="Toggle sell">
             <Button variant="ghost">SOL</Button>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="morphl2" aria-label="Toggle sell">
+            <Button variant="ghost">MORPHL2</Button>
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
@@ -97,10 +102,17 @@ export function Trades() {
             <TableHead>Trade</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          <TradeTableItem />
-          <TradeTableItem />
-        </TableBody>
+        {trade === "sell" ? (
+          <TableBody>
+            <SellTableItem />
+            <SellTableItem />
+          </TableBody>
+        ) : (
+          <TableBody>
+            <BuyTableItem />
+            <BuyTableItem />
+          </TableBody>
+        )}
       </Table>
     </div>
   );

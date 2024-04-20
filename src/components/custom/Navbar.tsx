@@ -38,7 +38,7 @@ function Navbar() {
   const [trade, setTrade] = useQueryState("trade", { defaultValue: "buy" });
 
   return (
-    <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 w-screen">
+    <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 w-screen z-50">
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Link
           href="#"
@@ -123,44 +123,47 @@ function Navbar() {
         {/*</form>*/}
 
         <div className="ml-auto flex items-center">
-          {openAccountModal && (<DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                  variant="secondary"
-                  className="mr-5"
-              >
-                Ads
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => {
-                router.push("/my-ads");
-              }}>My Ads</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                router.push("/new-ad");
-              }}>Post Ad</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>)}
-
-
           {openConnectModal && (
             <Button variant="default" onClick={openConnectModal}>
               Connect Wallet
             </Button>
           )}
+        </div>
 
-          {openAccountModal && (
+        {openAccountModal && (<DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
-              variant="secondary"
-              size="icon"
-              className="rounded-full ml-auto"
-              onClick={openAccountModal}
+                variant="secondary"
+                size="icon"
+                className="rounded-full ml-auto"
             >
               <CircleUser className="h-5 w-5" />
               <span className="sr-only">Toggle user menu</span>
             </Button>
-          )}
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Address: {account.address}</DropdownMenuItem>
+            <DropdownMenuItem>Balance: {balance?.data?.symbol} {balance?.data?.formatted}</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              router.push("/my-ads");
+            }}>My Ads</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              router.push("/new-ad");
+            }}>Post Ad</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              router.push("/orders");
+            }}>Orders</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              router.push("/payment-methods");
+            }}>Payment Methods</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Disconnect Wallet</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>)}
       </div>
     </header>
   );
