@@ -26,13 +26,8 @@ import {useWaitForTransactionReceipt, useWriteContract} from "wagmi";
 import {contractAddress} from "@/app/WalletProvider";
 import abi from "@/abi/OptimisticP2P.json";
 import {sha256} from "viem";
-import {useQueryState} from "nuqs";
-import {useLocalStorage} from "usehooks-ts";
-import {useAppConfig} from "@/app/ConfigContext";
 
-export function OrderDetails({offer}: {offer: Offer}) {
-
-  const config = useAppConfig();
+export function OrderDetails() {
   const [parent] = useAutoAnimate();
   const [modalBodyRef] = useAutoAnimate();
   const { toast } = useToast();
@@ -41,10 +36,6 @@ export function OrderDetails({offer}: {offer: Offer}) {
   const [reasonError, setReasonError] = useState<string | null>(null)
   const { data: hash, writeContractAsync } = useWriteContract();
 
-
-  function getTokenName() {
-    return config?.tradeTokens.find(token => token.address === offer.asset)?.symbol
-  }
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
       useWaitForTransactionReceipt({
@@ -72,15 +63,15 @@ export function OrderDetails({offer}: {offer: Offer}) {
               <div className="flex justify-between mt-2">
                 <div>
                   <div className="text-sm text-gray-500">Amount</div>
-                  <div className="text-lg font-semibold">{offer?.fiat} {offer?.totalAmount}</div>
+                  <div className="text-lg font-semibold">GH₵ 550.00</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500">Price</div>
-                  <div className="text-lg font-semibold">{offer?.fiat} {offer?.price}</div>
+                  <div className="text-lg font-semibold">GH₵ 13.88</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500">Receive Quantity</div>
-                  <div className="text-lg font-semibold">39.62 {getTokenName()}</div>
+                  <div className="text-lg font-semibold">39.62 USDT</div>
                 </div>
               </div>
             </Card>
@@ -88,25 +79,25 @@ export function OrderDetails({offer}: {offer: Offer}) {
               <h2 className="text-lg font-semibold">2. Make Payment</h2>
               <div className="mt-2">
                 <div className="bg-stone-800 p-3 rounded-lg flex items-center justify-between">
-                  <span className="font-semibold">{offer?.paymentMethod}</span>
+                  <span className="font-semibold">MTN Mobile Money</span>
                 </div>
                 <div className="mt-4 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Advertiser&apos;s terms</span>
+                    <span className="text-sm">Reference message</span>
                     <span className="font-semibold text-muted-foreground">
-                      {offer?.terms}
+                      20614578271356063744
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Full Name</span>
                     <span className="font-semibold text-muted-foreground">
-                      {offer?.accountName}
+                      Some Guy
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Account Number</span>
+                    <span className="text-sm">Phone Number</span>
                     <span className="font-semibold text-muted-foreground">
-                      {offer?.accountNumber}
+                      059320562
                     </span>
                   </div>
                 </div>
@@ -137,11 +128,11 @@ export function OrderDetails({offer}: {offer: Offer}) {
                         <p className="font-semibold">MTN Mobile Money</p>
                         <div className="flex items-center justify-between mt-4">
                           <p className="text-muted-foreground">Full Name</p>
-                          <p>{offer?.accountName}</p>
+                          <p>Some Guy</p>
                         </div>
                         <div className="flex items-center justify-between">
-                          <p className="text-muted-foreground">Account Number</p>
-                          <p>{offer?.accountNumber}</p>
+                          <p className="text-muted-foreground">Phone Number</p>
+                          <p>0591234343</p>
                         </div>
                       </Card>
                     </DialogBody>
@@ -192,15 +183,15 @@ export function OrderDetails({offer}: {offer: Offer}) {
                           if (reason.length > 0) {
                             setOrderPaid(true)
                             setReasonError(null)
+                            toast({
+                              title: "An appeal has been made for this order"
+                            })
                             let txn = await writeContractAsync({
                               address: contractAddress,
                               abi: abi.abi,
                               functionName: "appealOrder",
                               args:[2323, sha256(`0x${reason}`)]
                             });
-                            toast({
-                              title: "An appeal has been made for this order"
-                            })
                           } else {
                             setReasonError("Please enter a reason")
                           }
@@ -240,12 +231,12 @@ export function OrderDetails({offer}: {offer: Offer}) {
       <div className="lg:w-96 space-y-4">
         <div className="p-4 rounded-lg shadow space-y-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-muted-foreground">Order ID</h2>
-            <span className="text-xs">{offer.offerId}</span>
+            <h2 className="text-muted-foreground">Order number</h2>
+            <span>20614578271356063744</span>
           </div>
           <div className="flex items-center justify-between">
             <h2 className="text-muted-foreground">Time created</h2>
-            <span className="text-xs">{new Date().toUTCString()}</span>
+            <span>2024-04-19 10:01:22</span>
           </div>
         </div>
         <Card className=" p-4 rounded-lg shadow space-y-2">
@@ -255,11 +246,18 @@ export function OrderDetails({offer}: {offer: Offer}) {
                 alt="SOME_GUY69"
                 src="/placeholder.svg?height=40&width=40"
               />
-              <AvatarFallback>{offer?.accountName[0]}</AvatarFallback>
+              <AvatarFallback>S</AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-lg font-semibold">{offer?.accountName}</h2>
+              <h2 className="text-lg font-semibold">SOME_GUY69</h2>
             </div>
+          </div>
+          <div className="bg-stone-800 p-3 rounded-lg">
+            <p className="text-sm">
+              You have successfully created order. Please copy and add reference
+              message 20614578271356063744 to the remark/description during your
+              payment so the seller can identify the payment.
+            </p>
           </div>
           <div className="bg-stone-800 p-3 rounded-lg">
             <p className="text-sm">Please send the money ASAP!!!</p>
