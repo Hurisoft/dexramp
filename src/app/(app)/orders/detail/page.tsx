@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react';
+import React, {Suspense} from 'react';
 import {OrderDetails} from "@/components/order-details";
 import {useLocalStorage} from "usehooks-ts";
 import {useQueryState} from "nuqs";
@@ -18,7 +18,9 @@ function Page() {
 
     return (
         <div>
-            <OrderDetails offer={JSON.parse(offer)} />
+            <Suspense>
+                <OrderDetails offer={JSON.parse(offer)} />
+            </Suspense>
         </div>
     );
 }
