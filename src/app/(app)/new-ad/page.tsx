@@ -6,7 +6,7 @@ import SellForm from "@/app/(app)/new-ad/sell-form";
 
 function Page() {
     return (
-        <div className="p-6 max-w-screen-2xl mx-auto">
+        <div className="md:p-6 max-w-screen-2xl mx-auto">
             <Tabs defaultValue="buy" className="w-full">
                 <TabsList>
                     <TabsTrigger value="buy">I want to buy</TabsTrigger>

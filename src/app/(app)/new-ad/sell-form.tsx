@@ -29,6 +29,18 @@ import { toast } from "@/components/ui/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import {
+  useAccount,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+  useBalance,
+} from "wagmi";
+import abi from "@/abi/OptimisticP2P.json";
+import { contractAddress } from "@/app/WalletProvider";
+import { sha256 } from "viem";
+import { useRouter } from "next/navigation";
+import { useAppConfig } from "@/app/ConfigContext";
+import { useLocalStorage } from "usehooks-ts";
 
 const FormSchema = z.object({
   asset: z.string({
@@ -63,21 +75,27 @@ const FormSchema = z.object({
   timeLimit: z.string({
     required_error: "Please select a time limit",
   }),
+  accountNumber: z.string({
+    required_error: "Please enter account number",
+  }),
+  accountName: z.string({
+    required_error: "Please enter account name",
+  }),
+  orderType: z.number(),
+  offerId: z.string(),
   terms: z.string().optional(),
 });
 
-function onSubmit(data: z.infer<typeof FormSchema>) {
-  toast({
-    title: "You submitted the following values:",
-    description: (
-      <pre className="mt-2 rounded-md p-4 w-[340px] bg-slate-950">
-        <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-      </pre>
-    ),
-  });
-}
-
 function SellForm() {
+  const router = useRouter();
+  const config = useAppConfig();
+
+  const { data: hash, writeContractAsync } = useWriteContract();
+  const account = useAccount();
+  const balance = useBalance({
+    address: account.address,
+  });
+
   const [assetContainerRef] = useAutoAnimate();
   const [fiatContainerRef] = useAutoAnimate();
   const [priceContainerRef] = useAutoAnimate();
@@ -86,42 +104,71 @@ function SellForm() {
   const [maxContainerRef] = useAutoAnimate();
   const [paymentMethodContainerRef] = useAutoAnimate();
   const [timeLimitContainerRef] = useAutoAnimate();
-
-  const paymentMethodsOptions = [
-    {
-      label: "MTN MoMo",
-      value: "momo",
-      accountNumber: "0591244439",
-      accountName: "Some Guy",
-    },
-    {
-      label: "Telecel Cash",
-      value: "tcash",
-      accountNumber: "0504954579",
-      accountName: "Some Guy",
-    },
-    {
-      label: "AT Money",
-      value: "atmoney",
-      accountNumber: "0566146140",
-      accountName: "Some Guy",
-    },
-    {
-      label: "Standard Chartered",
-      value: "stanchart",
-      accountNumber: "0013323803823203",
-      accountName: "Some Cool Guy",
-    },
-  ];
+  const [offers, setOffers, removeOffers] = useLocalStorage("offers", []);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      totalAmount: 0,
+      orderType: 1,
+      offerId: crypto.randomUUID()
+    },
   });
+
+  function getTokenName(token: string) {
+    return config?.tradeTokens.find(
+      (token) => token.address === form.getValues("asset"),
+    )?.symbol;
+  }
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    let txn = await writeContractAsync({
+      address: contractAddress,
+      abi: abi.abi,
+      functionName: "createOffer",
+      args: [
+        form.getValues("asset"),
+        form.getValues("fiat"),
+        sha256(`0x${form.getValues("paymentMethod")}`),
+        form.getValues("price"),
+        form.getValues("orderLimitMin"),
+        form.getValues("orderLimitMax"),
+        sha256(
+          `0x${form.getValues("accountName")}${form.getValues(
+            "accountNumber",
+          )}`,
+        ),
+        account.address,
+        1,
+      ],
+    });
+    // @ts-ignore
+    setOffers([...offers, JSON.stringify(data, null, 2)]);
+    console.log("TXN", txn);
+    router.push("/my-ads");
+    // toast({
+    //   title: "You submitted the following values:",
+    //   description: (
+    //       <pre className="mt-2 rounded-md p-4 w-[340px] bg-slate-950">
+    //       <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+    //     </pre>
+    //   ),
+    // });
+  }
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
+
+  console.log("isLoading", isConfirming);
+  console.log("isConfirmed", isConfirmed);
+  console.log("hash", hash);
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Card className="px-8 flex flex-col gap-6 py-6">
+        <Card className="px-4 md:px-8 flex flex-col gap-6 py-6">
           <p className="font-semibold">Type and price</p>
           <div className="flex items-center gap-6">
             <div className="w-full max-w-sm flex flex-col gap-3">
@@ -141,12 +188,11 @@ function SellForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent position="popper">
-                        <SelectItem value="usdt">USDT</SelectItem>
-                        <SelectItem value="btc">BTC</SelectItem>
-                        <SelectItem value="fdusd">FDUSD</SelectItem>
-                        <SelectItem value="bnb">BNB</SelectItem>
-                        <SelectItem value="eth">ETH</SelectItem>
-                        <SelectItem value="sol">SOL</SelectItem>
+                        {config?.tradeTokens.map((ass) => (
+                          <SelectItem key={ass.address} value={ass.address}>
+                            {ass.symbol}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -171,8 +217,11 @@ function SellForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent position="popper">
-                        <SelectItem value="ghs">GHS</SelectItem>
-                        <SelectItem value="ngn">NGN</SelectItem>
+                        {config?.currencies.map((curr) => (
+                          <SelectItem key={curr} value={curr}>
+                            {curr}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -193,9 +242,9 @@ function SellForm() {
                     <Input type="number" placeholder="0" {...field} />
                   </FormControl>
                   <FormDescription>
-                    I want to sell each {form.getValues("asset")?.toUpperCase()}{" "}
-                    for {form.getValues("fiat")?.toUpperCase()}{" "}
-                    {form.getValues("price")}
+                    I want to sell each{" "}
+                    {getTokenName(form.getValues("asset")?.toUpperCase())}
+                    for {form.getValues("price")} {form.getValues("fiat")} for
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -227,16 +276,10 @@ function SellForm() {
                           />
                         </FormControl>
                         <span className="text-2xl">
-                          {form.getValues("asset")?.toUpperCase()}
+                          {getTokenName(form.getValues("asset")?.toUpperCase())}
                         </span>
                       </div>
                     </FormItem>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs">
-                        Available: 2,081.71{" "}
-                        {form.getValues("asset")?.toUpperCase()}
-                      </p>
-                    </div>
                   </div>
                 </Card>
                 <FormMessage className="mt-2" />
@@ -246,7 +289,7 @@ function SellForm() {
 
           <div className="flex flex-col gap-4">
             <Label>Order Limit</Label>
-            <div className="flex items-end gap-6">
+            <div className="flex flex-col md:flex-row items-end gap-6">
               <div className="flex flex-col gap-3 w-full max-w-sm">
                 <FormField
                   control={form.control}
@@ -273,11 +316,6 @@ function SellForm() {
                               </span>
                             </div>
                           </FormItem>
-                          <div className="flex justify-between items-center">
-                            <p className="text-xs">
-                              ≈ 81.71 {form.getValues("asset")?.toUpperCase()}
-                            </p>
-                          </div>
                         </div>
                       </Card>
                       <FormMessage className="mt-2" />
@@ -311,11 +349,6 @@ function SellForm() {
                               </span>
                             </div>
                           </FormItem>
-                          <div className="flex justify-between items-center">
-                            <p className="text-xs">
-                              ≈ 81.71 {form.getValues("asset")?.toUpperCase()}
-                            </p>
-                          </div>
                         </div>
                       </Card>
                       <FormMessage className="mt-2" />
@@ -326,7 +359,7 @@ function SellForm() {
             </div>
           </div>
 
-          <div className="flex gap-6 justify-between items-center max-w-[792px]">
+          <div className="flex flex-col md:flex-row md:gap-6 justify-between md:items-center max-w-[792px]">
             <div className="max-w-sm flex flex-col gap-4 flex-1">
               <FormField
                 control={form.control}
@@ -344,15 +377,9 @@ function SellForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent position="popper">
-                        {paymentMethodsOptions.map((method) => (
-                          <SelectItem key={method.accountNumber} value={method.accountNumber}>
-                            <p>
-                              {method.label}{" "}
-                              <span className="text-muted-foreground">
-                                {method.accountNumber}
-                              </span>
-                              <span> {method.accountName}</span>
-                            </p>
+                        {config?.paymentMethods.map((meth) => (
+                          <SelectItem key={meth} value={meth}>
+                            {meth}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -362,39 +389,71 @@ function SellForm() {
                 )}
               />
             </div>
-
-            <AddPaymentMethodButton />
+            <div className="w-full max-w-sm flex flex-col gap-3">
+              <FormField
+                control={form.control}
+                name="accountNumber"
+                render={({ field }) => (
+                  <FormItem ref={priceContainerRef}>
+                    <FormLabel>Account Number</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            {/*<AddPaymentMethodButton />*/}
           </div>
 
-          <div className="w-full max-w-sm flex flex-col gap-3">
-            <FormField
-              control={form.control}
-              name="timeLimit"
-              render={({ field }) => (
-                <FormItem ref={timeLimitContainerRef}>
-                  <FormLabel>Payment Time Limit</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+          <div className="flex flex-col md:flex-row gap-4 justify-between max-w-[792px]">
+            <div className="w-full max-w-sm flex flex-col gap-3">
+              <FormField
+                control={form.control}
+                name="accountName"
+                render={({ field }) => (
+                  <FormItem ref={priceContainerRef}>
+                    <FormLabel>Account Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger id="time">
-                        <SelectValue placeholder="Time Limit" />
-                      </SelectTrigger>
+                      <Input type="text" placeholder="Some Person" {...field} />
                     </FormControl>
-                    <SelectContent position="popper">
-                      <SelectItem value="10">10 Minutes</SelectItem>
-                      <SelectItem value="15">15 Minutes</SelectItem>
-                      <SelectItem value="20">20 Minutes</SelectItem>
-                      <SelectItem value="25">25 Minutes</SelectItem>
-                      <SelectItem value="30">30 Minutes</SelectItem>
-                      <SelectItem value="60">1 Hour</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="w-full max-w-sm flex flex-col gap-3">
+              <FormField
+                control={form.control}
+                name="timeLimit"
+                render={({ field }) => (
+                  <FormItem ref={timeLimitContainerRef}>
+                    <FormLabel>Payment Time Limit</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger id="time">
+                          <SelectValue placeholder="Time Limit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent position="popper">
+                        <SelectItem value="10">10 Minutes</SelectItem>
+                        <SelectItem value="15">15 Minutes</SelectItem>
+                        <SelectItem value="20">20 Minutes</SelectItem>
+                        <SelectItem value="25">25 Minutes</SelectItem>
+                        <SelectItem value="30">30 Minutes</SelectItem>
+                        <SelectItem value="60">1 Hour</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           <Separator />

@@ -6,13 +6,13 @@ import {
   RainbowKitProvider,
 } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
-import { mainnet, polygon, optimism, arbitrum, base } from "wagmi/chains";
+import { mainnet, polygon, optimism, arbitrum, base, morphSepolia } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 const config = getDefaultConfig({
-  appName: "My RainbowKit App",
-  projectId: "YOUR_PROJECT_ID",
-  chains: [mainnet, polygon, optimism, arbitrum, base],
+  appName: "DexRamp",
+  projectId: "69a5bf3eabf592f2fdd10bdf4a15f138",
+  chains: [mainnet, morphSepolia],
   ssr: true, // If your dApp uses server side rendering (SSR)
 });
 
@@ -39,3 +39,5 @@ function WalletProvider({ children }: { children: React.ReactNode }) {
 }
 
 export default WalletProvider;
+
+export const contractAddress = "0xACBC1eC300bBea9A9FD0A661cD717d8519c5FCA5"

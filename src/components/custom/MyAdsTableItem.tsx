@@ -22,20 +22,25 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {useAppConfig} from "@/app/ConfigContext";
 
-function MyAdsTableItem() {
+function MyAdsTableItem({offer}: {offer: Offer}) {
   const { openConnectModal } = useConnectModal();
+  const config = useAppConfig();
+
+  function getTokenName() {
+    return config?.tradeTokens.find(token => token.address === offer.asset)?.symbol
+  }
 
   return (
     <TableRow>
-      <TableCell className="text-xl">13.50 GHS</TableCell>
+      <TableCell className="text-xl">{offer.fiat} {offer.price}</TableCell>
       <TableCell>
-        <p>2,081.71 USDT</p>
-        <p className="text-neutral-500 mt-1">GH₵200 - GH₵3,000</p>
+        <p>{offer.totalAmount} {getTokenName()} </p>
+        <p className="text-neutral-500 mt-1">{offer.fiat} {offer.orderLimitMin} - {offer.fiat} {offer.orderLimitMax}</p>
       </TableCell>
-      <TableCell className="flex flex-col gap-2 items-start">
-        <Badge variant="secondary">MoMo</Badge>
-        <Badge variant="secondary">Telecel cash</Badge>
+      <TableCell className="flex flex-col gap-2 items-center">
+        <Badge variant="secondary">{offer.paymentMethod}</Badge>
       </TableCell>
       <TableCell>
         <div className="flex gap-4 max-w-sm">

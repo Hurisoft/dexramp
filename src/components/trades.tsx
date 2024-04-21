@@ -22,49 +22,65 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { parseAsInteger, useQueryState } from "nuqs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import BuyTableItem from "@/components/custom/BuyTableItem";
 import SellTableItem from "@/components/custom/SellTableItem";
+import abi from "@/abi/OptimisticP2P.json"
+import {useWatchContractEvent, useReadContract} from "wagmi";
+import {contractAddress} from "@/app/WalletProvider";
+import {useAppConfig} from "@/app/ConfigContext";
+import {configEndpoint, offersEndpoint} from "@/services/app_urls";
+import {useLocalStorage} from "usehooks-ts";
 
 export function Trades() {
+  const config = useAppConfig();
+
   const [amount, setAmount] = useQueryState("amount");
   const [currency, setCurrency] = useQueryState("currency");
   const [paymentMethod, setPaymentMethod] = useQueryState("paymentMethod");
-  const [crypto, setCrypto] = useQueryState("crypto", { defaultValue: "usdt" });
+  const [crypto, setCrypto] = useQueryState("crypto", { defaultValue: "trk" });
   const [trade, setTrade] = useQueryState("trade", { defaultValue: "buy" });
 
+  const [offers, setOffers, removeOffers] = useLocalStorage("offers", []);
+
+
+  // const [offers, setOffers] = useState([])
+  //
+  // useEffect(() => {
+  //   const fetchOffers = async () => {
+  //     try {
+  //       const response = await fetch(offersEndpoint);
+  //       if (!response.ok) {
+  //         throw new Error('Failed to fetch offers');
+  //       }
+  //       const data = await response.json();
+  //       setOffers(data);
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
+  //
+  //   fetchOffers();
+  // }, []);
+
+
   return (
-    <div className="p-6 max-w-screen-2xl mx-auto">
+    <div className="md:p-6 max-w-screen-2xl mx-auto">
       <div className="flex gap-2 mb-4">
         <ToggleGroup
           value={crypto}
           onValueChange={(cryp) => setCrypto(cryp)}
           type="single"
+          className="flex flex-wrap justify-start"
         >
-          <ToggleGroupItem value="usdt" aria-label="Toggle buy">
-            <Button variant="ghost">USDT</Button>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="btc" aria-label="Toggle sell">
-            <Button variant="ghost">BTC</Button>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="fdusd" aria-label="Toggle sell">
-            <Button variant="ghost">FDUSD</Button>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="bnb" aria-label="Toggle sell">
-            <Button variant="ghost">BNB</Button>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="eth" aria-label="Toggle sell">
-            <Button variant="ghost">ETH</Button>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="sol" aria-label="Toggle sell">
-            <Button variant="ghost">SOL</Button>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="morphl2" aria-label="Toggle sell">
-            <Button variant="ghost">MORPHL2</Button>
-          </ToggleGroupItem>
+          {config?.tradeTokens.map((ass) => (
+              <ToggleGroupItem key={ass.address} value={ass.address} aria-label="Toggle buy">
+                <Button variant="ghost">{ass.symbol}</Button>
+              </ToggleGroupItem>
+          ))}
         </ToggleGroup>
       </div>
-      <div className="flex gap-4 mb-6 max-w-3xl">
+      <div className="flex flex-col md:flex-row gap-4 mb-6 max-w-3xl">
         <Input
           className="appearance-none"
           type="number"
@@ -76,8 +92,11 @@ export function Trades() {
             <SelectValue placeholder="Currency" />
           </SelectTrigger>
           <SelectContent position="popper">
-            <SelectItem value="ghs">GHS</SelectItem>
-            <SelectItem value="ngn">NGN</SelectItem>
+            {config?.currencies.map((curr) => (
+              <SelectItem key={curr} value={curr}>
+                {curr}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select onValueChange={(method) => setPaymentMethod(method)}>
@@ -85,10 +104,11 @@ export function Trades() {
             <SelectValue placeholder="Payment Method" />
           </SelectTrigger>
           <SelectContent position="popper">
-            <SelectItem value="mtn">MTN MoMo</SelectItem>
-            <SelectItem value="telecel">Telecel Cash</SelectItem>
-            <SelectItem value="airteltigo">AT Money</SelectItem>
-            <SelectItem value="bank">Bank</SelectItem>
+            {config?.paymentMethods.map((meth) => (
+              <SelectItem key={meth} value={meth}>
+                {meth}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -104,13 +124,11 @@ export function Trades() {
         </TableHeader>
         {trade === "sell" ? (
           <TableBody>
-            <SellTableItem />
-            <SellTableItem />
+            {offers.filter(offer => JSON.parse(offer).orderType === 1).map(o => <SellTableItem key={o} offer={JSON.parse(o)} />)}
           </TableBody>
         ) : (
           <TableBody>
-            <BuyTableItem />
-            <BuyTableItem />
+            {offers.filter(offer => JSON.parse(offer).orderType === 0).map(o => <BuyTableItem key={o} offer={JSON.parse(o)} />)}
           </TableBody>
         )}
       </Table>

@@ -15,7 +15,7 @@ import {
 
 function Page() {
   return (
-    <div className="p-6 max-w-screen-2xl mx-auto">
+    <div className="md:p-6 max-w-screen-2xl mx-auto">
       <div className="mb-6"><AddPaymentMethodButton /></div>
       <Table>
         <TableHeader>

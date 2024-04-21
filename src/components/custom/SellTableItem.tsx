@@ -37,8 +37,13 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { ToastAction } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import { Option } from "@/components/ui/multiple-selector";
+import {useAccount, useBalance, useWaitForTransactionReceipt, useWriteContract} from "wagmi";
+import { contractAddress } from "@/app/WalletProvider";
+import abi from "@/abi/OptimisticP2P.json";
+import { sha256 } from "viem";
+import {useAppConfig} from "@/app/ConfigContext";
 
-const paymentMethodsOptions = [
+export const paymentMethodsOptions = [
   {
     label: "MTN MoMo",
     value: "momo",
@@ -65,13 +70,21 @@ const paymentMethodsOptions = [
   },
 ];
 
-function SellTableItem() {
+function SellTableItem({offer}: {offer: Offer}) {
+  const config = useAppConfig();
+
+  const account = useAccount();
+  const balance = useBalance({
+    address: account.address,
+  });
+  const { data: hash, writeContractAsync } = useWriteContract();
+
   const { openConnectModal } = useConnectModal();
   const { toast } = useToast();
   const router = useRouter();
   const [parent, enableAnimations] = useAutoAnimate();
 
-  let rate = 13.5;
+  let rate = 13;
   let min = 200;
   let max = 3000;
 
@@ -84,44 +97,62 @@ function SellTableItem() {
     null,
   );
 
+  function getPaymentMethod(accountNumber: string) {
+    return paymentMethodsOptions.find(
+        (meth) => meth.accountNumber === accountNumber,
+    );
+  }
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+      useWaitForTransactionReceipt({
+        hash,
+      });
+
+  console.log("isLoading", isConfirming);
+  console.log("isConfirmed", isConfirmed);
+  console.log("hash", hash);
+
+  function getTokenName() {
+    return config?.tradeTokens.find(token => token.address === offer.asset)?.symbol
+  }
+
   return (
     <TableRow>
       <TableCell>
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarFallback>SG</AvatarFallback>
+            <AvatarFallback>{offer?.accountName[0]}</AvatarFallback>
           </Avatar>
           <div>
-            <p>SomeGuy69</p>
+            <p>{offer?.accountName}</p>
             <p className="text-sm text-neutral-500 mt-1">
               57 orders | 98.30% completion
             </p>
           </div>
         </div>
       </TableCell>
-      <TableCell className="text-xl">13.50 GHS</TableCell>
+      <TableCell className="text-xl">{offer.fiat} {offer.price}</TableCell>
       <TableCell>
-        <p>2,081.71 USDT</p>
-        <p className="text-neutral-500 mt-1">GH₵200 - GH₵3,000</p>
+        <p>{offer.totalAmount} {getTokenName()} </p>
+        <p className="text-neutral-500 mt-1">{offer.fiat} {offer.orderLimitMin} - {offer.fiat} {offer.orderLimitMax}</p>
       </TableCell>
       <TableCell className="flex flex-col gap-2 items-start">
-        <Badge variant="secondary">MoMo</Badge>
-        <Badge variant="secondary">Telecel cash</Badge>
+        <Badge variant="secondary">{offer.paymentMethod}</Badge>
       </TableCell>
       <TableCell>
         {/* If user has connected wallet, show trading modal, else show connect wallet modal */}
         {openConnectModal ? (
           <Button className="w-full" onClick={openConnectModal}>
-            Sell USDT
+            Sell {getTokenName()}
           </Button>
         ) : (
           <Dialog>
             <DialogTrigger className="w-full">
-              <Button className="w-full">Sell USDT</Button>
+              <Button className="w-full">Sell {getTokenName()}</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Sell USDT</DialogTitle>
+                <DialogTitle>Sell {getTokenName()}</DialogTitle>
                 <DialogDescription className="flex justify-between gap-2 items-center py-4">
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Avatar>
@@ -133,22 +164,19 @@ function SellTableItem() {
                         57 orders | 98.30% completion
                       </p>
                       <p className="text-xs text-neutral-500 mt-1 flex items-center gap-1">
-                        <ClockIcon className="w-4" /> 15 Minutes
+                        <ClockIcon className="w-4" />{offer.timeLimit} Minutes
                       </p>
                     </div>
                   </div>
                   <div className="flex-wrap justify-end flex gap-2">
-                    <Badge variant="secondary">MoMo</Badge>
-                    <Badge variant="secondary">Telecel cash</Badge>
-                    <Badge variant="secondary">Telecel cash</Badge>
-                    <Badge variant="secondary">Telecel cash</Badge>
+                    <Badge variant="secondary">{offer.paymentMethod}</Badge>
                   </div>
                 </DialogDescription>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="item-1">
                     <AccordionTrigger>Advertiser&apos;s terms</AccordionTrigger>
                     <AccordionContent>
-                      Fast payments only. Stay online
+                      {offer?.terms}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -171,10 +199,13 @@ function SellTableItem() {
                           // @ts-ignore
                           value={cryptoAmount}
                         />
-                        <span className="text-2xl">USDT</span>
+                        <span className="text-2xl">{getTokenName()}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-xs">Balance: 2,081.71 USDT</p>
+                        <p className="text-xs">
+                          Balance: {balance?.data?.symbol}{" "}
+                          {balance?.data?.formatted}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -188,7 +219,7 @@ function SellTableItem() {
                         <input
                           className="appearance-none text-2xl bg-transparent outline-0"
                           type="number"
-                          placeholder={`${min} - ${max}`}
+                          placeholder={`${offer.orderLimitMin} - ${offer.orderLimitMax}`}
                           required
                           onChange={(e) => {
                             setFiatAmount(Number(e.target.value));
@@ -199,10 +230,10 @@ function SellTableItem() {
                           // @ts-ignore
                           value={fiatAmount}
                         />
-                        <span className="text-2xl">GHS</span>
+                        <span className="text-2xl">{offer.fiat}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-xs">Rate: GHS 13.50</p>
+                        {/*<p className="text-xs">Rate: GHS 13.50</p>*/}
                       </div>
                     </div>
                   </Card>
@@ -216,7 +247,10 @@ function SellTableItem() {
                     </SelectTrigger>
                     <SelectContent>
                       {paymentMethodsOptions.map((method) => (
-                        <SelectItem key={method.accountNumber} value={method.accountNumber}>
+                        <SelectItem
+                          key={method.accountNumber}
+                          value={method.accountNumber}
+                        >
                           <p>
                             {method.label}{" "}
                             <span className="text-muted-foreground">
@@ -241,13 +275,13 @@ function SellTableItem() {
                   </Button>
                 </DialogClose>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     // @ts-ignore
-                    if (fiatAmount < min) {
-                      setFiatError(`Fiat amount cannot be less than ${min}`);
+                    if (fiatAmount < +offer.orderLimitMin) {
+                      setFiatError(`Fiat amount cannot be less than ${offer.orderLimitMin}`);
                       // @ts-ignore
-                    } else if (fiatAmount > max) {
-                      setFiatError(`Fiat amount cannot be more than ${max}`);
+                    } else if (fiatAmount > +offer.orderLimitMax) {
+                      setFiatError(`Fiat amount cannot be more than ${offer.orderLimitMax}`);
                     } else {
                       setFiatError(null);
 
@@ -255,19 +289,30 @@ function SellTableItem() {
                         setPaymentMethodError("Please select a payment method");
                       } else {
                         setPaymentMethodError(null);
+                        let txn = await writeContractAsync({
+                          address: contractAddress,
+                          abi: abi.abi,
+                          functionName: "createOffer",
+                          args: [
+                            "0x3f76e0dab24505d4f16def2958f1bfa664b186ad",
+                            "GHS",
+                            sha256(`0xMobile Money`),
+                            rate,
+                            min,
+                            max,
+                            sha256(
+                                `0x${getPaymentMethod(paymentMethod)
+                                    ?.accountName}${getPaymentMethod(paymentMethod)
+                                    ?.accountNumber}`,
+                            ),
+                            account.address,
+                            1,
+                          ],
+                        });
                         toast({
                           title: "You have successfully placed the order",
-                          action: (
-                            <ToastAction
-                              onClick={() =>
-                                router.push("/orders/detail?id=439e8dj8j9de3d3e")
-                              }
-                              altText="See order"
-                            >
-                              See order
-                            </ToastAction>
-                          ),
                         });
+                        router.push(`/orders/detail?id=${offer.offerId}`)
                       }
                     }
                   }}

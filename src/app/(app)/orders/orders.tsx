@@ -13,14 +13,18 @@ import {
 } from "@/components/ui/table";
 import BuyTableItem from "@/components/custom/BuyTableItem";
 import OrderTableItem from "@/components/custom/OrderTableItem";
+import {useLocalStorage} from "usehooks-ts";
 
 function Orders() {
     const [orderType, setCrypto] = useQueryState("orderType", {
         defaultValue: "all",
     });
 
+    const [offers, setOffers, removeOffers] = useLocalStorage("offers", []);
+
+
     return (
-        <div className="p-6 max-w-screen-2xl mx-auto">
+        <div className="md:p-6 max-w-screen-2xl mx-auto">
             <div className="flex gap-2 mb-4">
                 <ToggleGroup
                     value={orderType}
@@ -48,11 +52,12 @@ function Orders() {
                         <TableHead>Counterparty</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Order ID/Date</TableHead>
+                        <TableHead>Action</TableHead>
                     </TableRow>
                 </TableHeader>
                 <Suspense>
                     <TableBody>
-                        <OrderTableItem />
+                        {offers.map(offer => <OrderTableItem key={offer} offer={JSON.parse(offer)} />)}
                     </TableBody>
                 </Suspense>
             </Table>

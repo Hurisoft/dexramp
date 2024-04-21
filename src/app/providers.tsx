@@ -1,8 +1,16 @@
 "use client";
 
-import React from "react";
+import React, {useContext} from "react";
 import WalletProvider from "@/app/WalletProvider";
+import {ConfigContext, ConfigProvider} from "@/app/ConfigContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <WalletProvider>{children}</WalletProvider>;
+    const useConfig = (): Config | null => useContext(ConfigContext);
+
+
+    return (
+    <ConfigProvider>
+      <WalletProvider>{children}</WalletProvider>
+    </ConfigProvider>
+  );
 }
